@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R•CODE IMAGINATION — Membangun ruang dari imajinasi</title>
+<meta name="description" content="R•CODE oleh Hadier Al Ghanie — desainer & pengembang web independen. Kode HTML/CSS/JS gratis, perpustakaan prompt, dan ZonaGreen Creative Lab.">
+<meta name="theme-color" content="#061013">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#061013;
+  --text:#f6f3ff;
+  --muted:rgba(246,243,255,.8);
+  --glass:rgba(255,255,255,.08);
+  --glass-strong:rgba(255,255,255,.14);
+  --edge:rgba(255,255,255,.28);
+  --edge-dim:rgba(255,255,255,.08);
+  --accent:#00cdb5;
+  --accent2:#6b7bff;
+  --blur:22px;
+  --r:28px;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --display:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+
+/* ---------- Latar sutra berwarna (di balik kaca) ---------- */
+.backdrop{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
+  radial-gradient(120% 80% at 50% 110%,#1a0b2e 0%,transparent 60%),var(--bg)}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.9;will-change:transform;mix-blend-mode:screen}
+.b1{width:60vmax;height:34vmax;left:-15vmax;top:-8vmax;background:linear-gradient(120deg,#ff3b1f,#ff8a3d);transform:rotate(-20deg);animation:f1 22s ease-in-out infinite alternate}
+.b2{width:55vmax;height:30vmax;right:-18vmax;top:12vh;background:linear-gradient(120deg,#2b3cff,#8a3dff);transform:rotate(25deg);animation:f2 26s ease-in-out infinite alternate}
+.b3{width:50vmax;height:26vmax;left:8vw;bottom:-12vmax;background:linear-gradient(120deg,#d4145a,#ff5a2a);transform:rotate(10deg);animation:f3 30s ease-in-out infinite alternate}
+.b4{width:38vmax;height:22vmax;right:5vw;bottom:-6vmax;background:linear-gradient(120deg,#00b7ff,#3d5bff);animation:f4 24s ease-in-out infinite alternate}
+@keyframes f1{to{transform:translate(18vw,22vh) rotate(8deg) scale(1.15)}}
+@keyframes f2{to{transform:translate(-22vw,30vh) rotate(-10deg) scale(1.1)}}
+@keyframes f3{to{transform:translate(20vw,-26vh) rotate(-14deg) scale(1.2)}}
+@keyframes f4{to{transform:translate(-26vw,-30vh) rotate(18deg) scale(.9)}}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.cursor-glow{position:fixed;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:-1;left:0;top:0;
+  background:radial-gradient(circle,rgba(255,140,90,.28),transparent 65%);transform:translate(-50%,-50%);transition:opacity .4s;opacity:0}
+
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:-2;display:none}
+.gl-on #gl{display:block}
+.gl-on .backdrop,.gl-on .cursor-glow{display:none}
+.gl-on .glass,.gl-on .btn-primary{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border-color:transparent!important}
+.gl-on .glass::before,.gl-on .glass::after{display:none}
+.gl-on .btn-primary{text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.gl-on .nav-links a:hover,.gl-on .nav-links a.active{background:rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* ---------- Komponen kaca ---------- */
+.glass{
+  position:relative;
+  background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 55%,rgba(255,255,255,.09));
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(1.7) brightness(1.05);
+  backdrop-filter:blur(var(--blur)) saturate(1.7) brightness(1.05);
+  border:1px solid var(--edge-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -1px 0 rgba(255,255,255,.08),
+    inset 1px 0 0 rgba(255,255,255,.18),
+    inset 0 0 28px rgba(255,255,255,.06),
+    0 18px 50px -12px rgba(0,0,0,.5);
+}
+.glass::before{ /* kilau tepi */
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(140deg,rgba(255,255,255,.75),rgba(255,255,255,0) 30%,rgba(255,255,255,0) 70%,rgba(255,255,255,.4));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
+.glass::after{ /* pantulan lembut */
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,.16),transparent 55%);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(40,30,70,.85)}
+}
+
+/* ---------- Navigasi ---------- */
+nav{position:fixed;top:16px;left:0;right:0;z-index:50;display:flex;justify-content:center;padding:0 16px}
+.nav-bar{display:flex;align-items:center;gap:28px;padding:10px 12px 10px 22px;border-radius:999px;width:min(920px,100%);justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.1rem;letter-spacing:-.02em}
+.logo-mark{width:26px;height:26px;border-radius:9px;}
+.nav-links{display:flex;gap:4px}
+.nav-links a{display:block;padding:8px 16px;border-radius:999px;font-size:.9rem;font-weight:500;color:var(--muted);transition:.25s}
+.nav-links a:hover,.nav-links a.active{color:#fff;background:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.nav-cta{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font-size:.88rem;font-weight:600;color:#fff;
+  background:linear-gradient(180deg,#ff8a5c,#ff4a2a);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -6px rgba(255,80,40,.7);transition:.25s}
+.nav-cta:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.menu-toggle{display:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--edge-dim);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;align-items:center;justify-content:center}
+.mobile-menu{display:none}
+
+/* ---------- Tata letak umum ---------- */
+section{position:relative;padding:110px 24px}
+.section-inner{max-width:1120px;margin:0 auto}
+.section-header-center{text-align:center;margin-bottom:56px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.9);margin-bottom:18px}
+.section-title{font-family:var(--display);font-size:clamp(2rem,5vw,3.4rem);line-height:1.08;letter-spacing:-.03em;font-weight:600;margin-bottom:14px}
+.section-subtitle{color:var(--muted);max-width:560px;margin:0 auto;font-size:1.05rem}
+
+/* ---------- Hero ---------- */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:150px}
+.hero-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 18px;border-radius:999px;font-size:.8rem;font-weight:500;margin-bottom:30px}
+.hero-badge-dot{width:8px;height:8px;border-radius:50%;background:#5dffa6;box-shadow:0 0 12px #5dffa6;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4;transform:scale(.8)}}
+h1{font-family:var(--display);font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.02;letter-spacing:-.045em;font-weight:700;margin-bottom:26px;text-shadow:0 4px 40px rgba(0,0,0,.35)}
+h1 .line{display:block}
+h1 .word{display:inline-block;opacity:0;transform:translateY(40px);filter:blur(10px);animation:wordIn .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*.08s + .2s)}
+h1 em{font-style:normal;background:linear-gradient(100deg,#ffb27a,#ff4d6d 45%,#8f9bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes wordIn{to{opacity:1;transform:none;filter:none}}
+.hero-sub{max-width:580px;color:var(--muted);font-size:clamp(1rem,2vw,1.2rem);margin-bottom:40px}
+.hero-buttons{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.btn-primary,.btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:16px 30px;border-radius:999px;font-weight:600;font-size:1rem;transition:transform .25s,filter .25s;cursor:pointer;border:0;font-family:inherit}
+.btn-primary{color:#fff;background:linear-gradient(180deg,#6f80ff,#3446e0);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -8px 16px rgba(20,30,140,.35),0 14px 36px -8px rgba(60,80,255,.75)}
+.btn-primary.warm{background:linear-gradient(180deg,#ff8a5c,#ff3d2a);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -8px 16px rgba(160,20,0,.3),0 14px 36px -8px rgba(255,70,40,.75)}
+.btn-ghost{color:#fff}
+.btn-primary:hover,.btn-ghost:hover{transform:translateY(-3px) scale(1.02)}
+.btn-primary:active,.btn-ghost:active{transform:scale(.97)}
+.scroll-hint{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);width:26px;height:44px;border-radius:99px;display:flex;justify-content:center;padding-top:9px}
+.scroll-hint i{width:3px;height:9px;border-radius:3px;background:#fff;animation:sc 1.8s infinite}
+@keyframes sc{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(14px)}}
+
+/* ---------- Marquee ---------- */
+.marquee-section{padding:30px 0;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.marquee-track{display:flex;gap:16px;width:max-content;animation:marq 40s linear infinite}
+.marquee-section:hover .marquee-track{animation-play-state:paused}
+.marquee-item{padding:12px 28px;border-radius:999px;font-family:var(--display);font-weight:500;font-size:1.05rem;white-space:nowrap}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* ---------- Statistik ---------- */
+.stats-section{padding:70px 24px}
+.stats-grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.stat{padding:34px 20px;border-radius:var(--r);text-align:center}
+.stat-number{font-family:var(--display);font-size:clamp(2.2rem,5vw,3.6rem);font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:10px}
+.stat-label{color:var(--muted);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+
+/* ---------- Prinsip ---------- */
+.principles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.principle-card{padding:34px 30px;border-radius:var(--r);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.principle-card:hover{transform:translateY(-8px)}
+.principle-number{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:14px;font-family:var(--display);font-weight:600;font-size:.95rem;margin-bottom:22px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.principle-card h3{font-family:var(--display);font-size:1.35rem;letter-spacing:-.02em;margin-bottom:10px;font-weight:600}
+.principle-card p{color:var(--muted);font-size:.97rem}
+
+/* ---------- Teks besar ---------- */
+.big-text-section{padding:90px 24px;text-align:center}
+.big-text{max-width:980px;margin:0 auto;font-family:var(--display);font-size:clamp(1.8rem,4.6vw,3.4rem);line-height:1.2;letter-spacing:-.03em;font-weight:600}
+.big-text span{opacity:.18;transition:opacity .4s}
+.big-text span.on{opacity:1}
+
+/* ---------- Proses ---------- */
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.process-step{padding:32px 26px;border-radius:var(--r);overflow:hidden}
+.process-line{height:3px;border-radius:3px;background:rgba(255,255,255,.15);margin-bottom:26px;position:relative}
+.process-dot{position:absolute;left:0;top:50%;width:14px;height:14px;border-radius:50%;transform:translateY(-50%);background:linear-gradient(135deg,#b6fff0,#00cdb5);box-shadow:0 0 18px rgba(0,205,181,.9)}
+.process-line::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:linear-gradient(90deg,#00cdb5,#8f9bff);transition:width 1.4s cubic-bezier(.2,.8,.2,1) .3s}
+.reveal.in .process-line::after{width:100%}
+.process-step h3{font-family:var(--display);font-size:1.4rem;margin-bottom:10px;font-weight:600}
+.process-step p{color:var(--muted);font-size:.95rem}
+
+/* ---------- CTA ---------- */
+.cta-card{max-width:860px;margin:0 auto;padding:70px 40px;border-radius:44px;text-align:center}
+.cta-card h2{font-family:var(--display);font-size:clamp(2.2rem,5.5vw,4rem);line-height:1.05;letter-spacing:-.04em;margin-bottom:20px;font-weight:700}
+.cta-card p{color:var(--muted);max-width:520px;margin:0 auto 34px;font-size:1.08rem}
+
+/* ---------- Kontak ---------- */
+.contact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:800px;margin:0 auto}
+.contact-card{display:flex;align-items:center;gap:18px;padding:26px 28px;border-radius:var(--r);transition:transform .3s}
+.contact-card:hover{transform:translateY(-6px)}
+.contact-icon{width:52px;height:52px;flex:none;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+.contact-card.whatsapp .contact-icon{background:linear-gradient(180deg,#3de27c,#13a850)}
+.contact-label{display:block;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.contact-value{display:block;font-family:var(--display);font-weight:600;font-size:1.1rem;word-break:break-all}
+
+/* ---------- Footer ---------- */
+footer{padding:20px 16px 40px}
+.footer-inner{max-width:1120px;margin:0 auto;padding:30px;border-radius:var(--r);text-align:center}
+.footer-links{display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:center;margin-bottom:18px;font-size:.9rem;color:var(--muted)}
+.footer-links a:hover{color:#fff}
+.footer-copy{font-size:.82rem;color:rgba(246,243,255,.5)}
+
+/* ---------- Animasi muncul ---------- */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- Responsif ---------- */
+@media(max-width:960px){
+  .principles-grid{grid-template-columns:repeat(2,1fr)}
+  .process-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:720px){
+  section{padding:80px 16px}
+  .nav-links,.nav-cta{display:none}
+  .menu-toggle{display:inline-flex}
+  .nav-bar{padding:8px 8px 8px 20px}
+  .mobile-menu{position:fixed;top:82px;left:16px;right:16px;z-index:49;border-radius:28px;padding:12px;flex-direction:column;gap:4px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:.3s;display:flex}
+  .mobile-menu.open{opacity:1;pointer-events:auto;transform:none}
+  .mobile-menu a{padding:14px 18px;border-radius:18px;font-weight:500}
+  .mobile-menu a:hover{background:rgba(255,255,255,.12)}
+  .principles-grid,.process-grid,.contact-grid{grid-template-columns:1fr}
+  .cta-card{padding:48px 22px;border-radius:32px}
+  .hero{padding-top:130px}
+  .scroll-hint{display:none}
+  .blob{filter:blur(50px)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal,h1 .word{opacity:1;transform:none;filter:none}
+  .big-text span{opacity:1}
+}
+
+/* ===== R•CODE ===== */
+.cards3.cards2{grid-template-columns:repeat(2,1fr)}
+img{max-width:100%}
+h1,.section-title,.feature-main h2,.cta-card h2{overflow-wrap:break-word}
+.gl-on .nav-bar,.gl-on .mobile-menu{background:rgba(6,16,19,.35)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important}
+:root{--teal:#00cdb5}
+.backdrop{background:radial-gradient(120% 80% at 50% 110%,#06222a 0%,transparent 60%),var(--bg)}
+.b1{background:linear-gradient(120deg,#00b8a4,#19f0c0)}.b2{background:linear-gradient(120deg,#2b3cff,#9a3dff)}
+.b3{background:linear-gradient(120deg,#0a8fb8,#00cdb5)}.b4{background:linear-gradient(120deg,#00b7ff,#3d5bff)}
+.cursor-glow{background:radial-gradient(circle,rgba(0,205,181,.25),transparent 65%)}
+.nav-bar{width:min(1040px,100%)}
+.logo{display:inline-block;font-size:1.15rem;letter-spacing:-.03em}
+.logo .dot{display:inline-block;width:.34em;height:.34em;border-radius:50%;background:var(--teal);margin:0 .08em;box-shadow:0 0 12px var(--teal);vertical-align:.1em}
+.logo-mark{display:none}
+.nav-links a{padding:8px 13px}
+.nav-cta{background:linear-gradient(180deg,#19e3cb,#00a896);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -6px rgba(0,205,181,.7);color:#02201c}
+.btn-primary{background:linear-gradient(180deg,#19e3cb,#00a896);color:#02201c;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -8px 16px rgba(0,80,70,.3),0 14px 36px -8px rgba(0,205,181,.7)}
+.btn-primary.warm{background:linear-gradient(180deg,#6f80ff,#3446e0);color:#fff}
+.gl-on .btn-primary,.gl-on .nav-cta{color:#fff}
+h1 em{background:linear-gradient(100deg,#ffffff,#b6fff0 50%,#dcd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{min-height:0;padding-top:150px;padding-bottom:40px}
+.hero-sub{max-width:660px}
+.fade-x{-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);overflow:hidden}
+.phones-wrap{width:100%;margin-top:64px;padding:30px 0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;overscroll-behavior-x:contain}
+.phones-wrap::-webkit-scrollbar{display:none}
+.phones-wrap.dragging{cursor:grabbing;user-select:none}
+.phone img{pointer-events:none;-webkit-user-drag:none;user-select:none}
+.phones{display:flex;gap:26px;width:max-content;padding:0 13px}
+.phone{width:196px;padding:9px;border-radius:40px;flex:none;transition:transform .4s}
+.phone:nth-child(odd){transform:translateY(18px)}
+.phone img{display:block;width:100%;aspect-ratio:540/1160;object-fit:cover;border-radius:31px;background:#0b1a1d}
+.marquee-section{-webkit-mask:none;mask:none}
+.feature{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:stretch;margin-bottom:24px}
+.feature.rev{grid-template-columns:.9fr 1.1fr}.feature.rev .feature-main{order:2}
+.feature-main{padding:46px;border-radius:36px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.feature-main h2{font-family:var(--display);font-size:clamp(2rem,4.6vw,3.3rem);letter-spacing:-.035em;line-height:1.05;margin-bottom:16px;font-weight:700}
+.feature-main h2 i{font-style:normal;background:linear-gradient(100deg,#ffffff,#b6fff0 55%,#dcd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.feature-main p{color:var(--muted);margin-bottom:28px;max-width:520px}
+.feature-img{padding:10px;border-radius:36px}
+.feature-img img{display:block;width:100%;height:100%;min-height:280px;object-fit:cover;border-radius:28px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{padding:30px 28px;border-radius:var(--r);display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.card:hover{transform:translateY(-8px)}
+.card .idx{font-family:'Space Grotesk',monospace;font-size:.72rem;letter-spacing:.14em;color:#7ff5e3;margin-bottom:14px;font-weight:600}
+.card h3{font-family:var(--display);font-size:1.3rem;letter-spacing:-.02em;margin-bottom:10px;font-weight:600}
+.card p{color:var(--muted);font-size:.95rem;margin-bottom:20px;flex:1}
+.tag{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:600}
+.tag.soon{display:inline-block;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.1);align-self:flex-start}
+.work-card{cursor:pointer}
+.work-card .go{margin-top:auto;display:inline-flex;gap:8px;font-weight:600;font-size:.9rem;color:#9ffbee}
+.sec-sub{margin-top:36px;text-align:center}
+.slogan{font-family:var(--display);letter-spacing:.2em;font-size:.78rem;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:16px}
+.contact-grid{grid-template-columns:repeat(3,1fr);max-width:1000px}
+.contact-value{font-size:1rem}
+.contact-card.ig .contact-icon{background:linear-gradient(135deg,#feda75,#d62976 50%,#4f5bd5)}
+.footer-brand{font-family:var(--display);font-weight:700;font-size:1.4rem;margin-bottom:6px}
+.footer-brand .dot{display:inline-block;width:.3em;height:.3em;border-radius:50%;background:var(--teal);margin:0 .08em;vertical-align:.1em}
+.footer-tag{font-size:.7rem;letter-spacing:.2em;color:var(--muted);margin-bottom:20px;text-transform:uppercase}
+@media(max-width:720px){.cards3.cards2{grid-template-columns:1fr}}
+@media(max-width:960px){.feature,.feature.rev{grid-template-columns:1fr}.feature.rev .feature-main{order:0}.cards3{grid-template-columns:1fr}.contact-grid{grid-template-columns:1fr}.nav-links a{padding:8px 10px;font-size:.84rem}}
+@media(max-width:720px){.phone{width:150px;border-radius:32px;padding:7px}.phone img{border-radius:25px}.feature-main{padding:32px 24px}.hero{padding-top:120px}}
+@media(max-width:720px){
+  .marquee-section.fade-x{-webkit-mask:none;mask:none}
+  .marquee-track{width:auto;max-width:560px;margin:0 auto;padding:0 16px;flex-wrap:wrap;justify-content:center;gap:10px;animation:none}
+  .marquee-track .clone{display:none}
+  .marquee-item{padding:9px 18px;font-size:.92rem}
+}
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-glow" aria-hidden="true"></div>
+
+<nav>
+  <div class="nav-bar glass">
+    <a href="#top" class="logo" aria-label="R•CODE">R<i class="dot"></i>CODE</a>
+    <ul class="nav-links">
+      <li><a href="#code">Kode Gratis</a></li>
+      <li><a href="#prompts">Prompt</a></li>
+      <li><a href="#zonagreen">ZonaGreen</a></li>
+      <li><a href="#experiments">Eksperimen</a></li>
+      <li><a href="#about">Tentang</a></li>
+    </ul>
+    <a href="#contact" class="nav-cta" data-tint="teal">Sapa saya <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <button class="menu-toggle" aria-label="Buka menu" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="mobile-menu glass" role="menu">
+  <a href="#code">Kode Gratis</a><a href="#prompts">Prompt</a><a href="#zonagreen">ZonaGreen</a><a href="#experiments">Eksperimen</a><a href="#about">Tentang</a><a href="#contact">Kontak</a>
+</div>
+
+<section class="hero" id="top">
+  <div class="hero-badge glass"><span class="hero-badge-dot"></span>Desainer &amp; Pengembang Web Independen</div>
+  <h1>
+    <span class="line"><span class="word" style="--i:0">Saya</span> <span class="word" style="--i:1">membangun</span></span>
+    <span class="line"><span class="word" style="--i:2"><em>website</em></span> <span class="word" style="--i:3">dan</span> <span class="word" style="--i:4"><em>aplikasi&nbsp;web</em></span></span>
+  </h1>
+  <p class="hero-sub">Website, aplikasi web, alat digital yang berguna, dan eksperimen kreatif. AI membantu saya menjelajah dan membangun — konsep, arahan desain, dan keputusan akhir tetap 100% milik saya.</p>
+  <div class="hero-buttons">
+    <a href="#work" class="btn-primary" data-tint="teal">Jelajahi playground <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <a href="#contact" class="btn-ghost glass">Sapa saya</a>
+  </div>
+  <div class="phones-wrap fade-x" aria-label="Pratinjau karya"><div class="phones" id="phones"><div class="phone glass"><img src="assets/images/hero-code-preview-01.webp" alt="Pratinjau karya R•CODE 1" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-02.webp" alt="Pratinjau karya R•CODE 2" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-03.webp" alt="Pratinjau karya R•CODE 3" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-04.webp" alt="Pratinjau karya R•CODE 4" loading="lazy" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-05.webp" alt="Pratinjau karya R•CODE 5" loading="lazy" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-06.webp" alt="Pratinjau karya R•CODE 6" loading="lazy" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-07.webp" alt="Pratinjau karya R•CODE 7" loading="lazy" decoding="async"></div><div class="phone glass"><img src="assets/images/hero-code-preview-08.webp" alt="Pratinjau karya R•CODE 8" loading="lazy" decoding="async"></div></div></div>
+</section>
+
+<div class="marquee-section fade-x" aria-hidden="true">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item glass">HTML</span><span class="marquee-item glass">CSS</span><span class="marquee-item glass">JavaScript</span><span class="marquee-item glass">Glassmorphism</span><span class="marquee-item glass">Claymorphism</span><span class="marquee-item glass">Prompt AI</span><span class="marquee-item glass">Desain Jersey</span><span class="marquee-item glass">DTF · Sablon · Sublimasi</span>
+  </div>
+</div>
+
+<div class="stats-section">
+  <div class="stats-grid">
+    <div class="stat glass reveal"><div class="stat-number" data-count="27">0</div><div class="stat-label">Proyek Kode</div></div>
+    <div class="stat glass reveal" style="--d:.1s"><div class="stat-number" data-count="49">0</div><div class="stat-label">File Sumber</div></div>
+    <div class="stat glass reveal" style="--d:.2s"><div class="stat-number" data-count="60">0</div><div class="stat-label">Koleksi Prompt</div></div>
+    <div class="stat glass reveal" style="--d:.3s"><div class="stat-number" data-count="4600" data-sep="1" data-suffix="+">0</div><div class="stat-label">Entri Prompt</div></div>
+  </div>
+</div>
+
+<section id="work">
+  <div class="section-inner">
+    <div class="section-header-center reveal"><span class="chip glass">R•CODE — Ide yang sedang berjalan</span><h2 class="section-title">Ruang bermain saya</h2><p class="section-subtitle">Kumpulan hal-hal yang saya buat, bagikan, dan terus jelajahi — tanpa berpura-pura semuanya sudah selesai.</p></div>
+    <div class="cards3 cards2">
+      <a href="#code" class="card work-card glass reveal"><div class="idx">01</div><h3>HTML &amp; CSS Gratis</h3><p>Navigation bar, glassmorphism, claymorphism, dan eksperimen antarmuka kecil.</p><span class="go">Jelajahi <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="#prompts" class="card work-card glass reveal"><div class="idx">02</div><h3>Perpustakaan Prompt Gratis</h3><p>Prompt yang bisa dipakai ulang untuk eksplorasi desain, pengembangan visual, dan kerja kreatif sehari-hari.</p><span class="go">Jelajahi <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="#zonagreen" class="card work-card glass reveal"><div class="idx">03</div><h3>ZonaGreen Creative Lab</h3><p>Ruang belajar untuk desainer apparel, pembuat jersey, dan alur kerja produksi cetak.</p><span class="go">Jelajahi <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="#experiments" class="card work-card glass reveal"><div class="idx">04</div><h3>Eksperimen &amp; Proyek</h3><p>Proyek web pribadi, prototipe, dan ide-ide yang sedang dibentuk.</p><span class="go">Jelajahi <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+    </div>
+  </div>
+</section>
+
+<section id="code">
+  <div class="section-inner">
+    <div class="feature">
+  <div class="feature-main glass reveal"><span class="chip glass">Sumber terbuka / 01</span><h2>Kode <i>Gratis</i></h2><p>Komponen HTML, CSS, dan JavaScript yang bisa dicoba, dipelajari, disalin, dan dikembangkan. Setiap koleksi dilengkapi pratinjau dan kode sumber.</p><a href="code-library.html" class="btn-primary" data-tint="teal">Buka perpustakaan kode <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+  <div class="feature-img glass reveal" style="--d:.12s"><img src="assets/images/free-code-preview.webp" alt="Pratinjau perpustakaan kode gratis R•CODE" loading="lazy" decoding="async"></div>
+</div>
+    <div class="cards3">
+      <div class="card glass reveal"><div class="idx">01 / NAVIGASI</div><h3>Navbar &amp; Bottom Navigation</h3><p>Tab bar beranimasi, liquid glass nav, floating dock, dan menu interaktif.</p><span class="tag">Pratinjau UI interaktif</span></div>
+      <div class="card glass reveal"><div class="idx">02 / KACA &amp; NEUMORFIK</div><h3>Glassmorphism &amp; Clay UI</h3><p>Sidebar, kontrol, switch, tombol, panel kaca, dan antarmuka yang terasa nyata.</p><span class="tag">Glass · Soft UI · Motion</span></div>
+      <div class="card glass reveal"><div class="idx">03 / EFEK &amp; PROYEK</div><h3>Efek &amp; Halaman Penuh</h3><p>Efek kursor, objek interaktif, layar login, dan contoh landing page.</p><span class="tag">HTML · CSS · JavaScript</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="prompts">
+  <div class="section-inner">
+    <div class="feature rev">
+  <div class="feature-main glass reveal"><span class="chip glass">Sumber terbuka / 02</span><h2>Prompt <i>Gratis</i></h2><p>Koleksi prompt AI untuk belajar, produktivitas, bisnis, pemrograman, desain, pembuatan visual, dan penyuntingan gambar. Buka koleksi, salin prompt yang dibutuhkan, lalu sesuaikan dengan konteksmu.</p><a href="prompt-library.html" class="btn-primary" data-tint="teal">Buka perpustakaan prompt <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+  <div class="feature-img glass reveal" style="--d:.12s"><img src="assets/images/prompt-library-preview.webp" alt="Pratinjau perpustakaan prompt gratis R•CODE" loading="lazy" decoding="async"></div>
+</div>
+    <div class="cards3">
+      <div class="card glass reveal"><div class="idx">01 / UMUM &amp; PRODUKTIVITAS</div><h3>Prompt AI Sehari-hari</h3><p>Prompt umum, produktivitas, perencanaan, gaya hidup, dan kreativitas.</p><span class="tag">Salin · Tempel · Sesuaikan</span></div>
+      <div class="card glass reveal"><div class="idx">02 / BELAJAR &amp; KERJA</div><h3>Belajar, Bisnis &amp; Kode</h3><p>Koleksi untuk pelajar, guru, bisnis, kreator konten, programmer, dan desainer.</p><span class="tag">Ide menjadi instruksi</span></div>
+      <div class="card glass reveal"><div class="idx">03 / VISUAL</div><h3>Prompt Gambar &amp; Kreatif</h3><p>Prompt untuk image generation, editing, pengubah gaya, miniatur, karakter, dan iklan.</p><span class="tag">Bayangkan · Sempurnakan · Buat</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="zonagreen">
+  <div class="section-inner">
+    <div class="feature">
+  <div class="feature-main glass reveal"><span class="chip glass">Ruang belajar dalam ekosistem R•CODE</span><h2>ZonaGreen <i>Creative Lab</i></h2><p>Belajar • Berkarya • Produksi. Merek belajar mandiri dan ruang sumber daya digital untuk desainer apparel — terutama desainer jersey olahraga, pembuat apparel custom, serta operator DTF, sablon, dan sublimasi.</p><a href="shop.html" class="btn-primary" data-tint="teal">Lihat etalase <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+  <div class="feature-img glass reveal" style="--d:.12s"><img src="assets/images/zonagreen-lab-preview.webp" alt="Pratinjau ZonaGreen Creative Lab" loading="lazy" decoding="async"></div>
+</div>
+    <div class="cards3">
+      <div class="card glass reveal"><div class="idx">01 / WEB BOOK</div><h3>Dasar &amp; Alur Kerja Jersey</h3><p>Web book interaktif tentang dasar jersey, alur desain, tipografi, revisi, dan file produksi akhir.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+      <div class="card glass reveal"><div class="idx">02 / TOOLKIT DIGITAL</div><h3>Prompt AI &amp; Template</h3><p>Prompt apparel terstruktur, template badan dan panel jersey, serta toolkit kreatif yang bisa dipakai ulang.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+      <div class="card glass reveal"><div class="idx">03 / PRODUKSI</div><h3>Checklist Siap Produksi</h3><p>Pemeriksaan praktis untuk resolusi, transparansi, warna, format file, DTF, sablon, dan sublimasi.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="experiments">
+  <div class="section-inner">
+    <div class="feature rev">
+  <div class="feature-main glass reveal"><span class="chip glass">Catatan dari meja kerja</span><h2>Karya <i>dalam proses</i></h2><p>Catatan tenang tentang prototipe, alat web kecil, studi antarmuka, dan ide yang masih dibentuk. Karya pilihan akan muncul di sini begitu siap dibagikan.</p><a href="code-library.html" class="btn-primary" data-tint="teal">Lihat perpustakaan kode <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+  <div class="feature-img glass reveal" style="--d:.12s"><img src="assets/images/experiments-preview.webp" alt="Pratinjau eksperimen R•CODE" loading="lazy" decoding="async"></div>
+</div>
+    <div class="cards3">
+      <div class="card glass reveal"><div class="idx">01 / PROYEK</div><h3>Eksperimen Web</h3><p>Website dan alat kecil yang dibuat untuk menyelesaikan kebutuhan sehari-hari tertentu.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+      <div class="card glass reveal"><div class="idx">02 / STUDI UI</div><h3>Studi Antarmuka</h3><p>Eksperimen navigasi, glassmorphism, claymorphism, dan gerak.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+      <div class="card glass reveal"><div class="idx">03 / PROSES</div><h3>Catatan Belajar</h3><p>Apa yang berhasil, apa yang gagal, dan apa yang saya pelajari saat membangun.</p><span class="tag soon">Konten sedang disiapkan</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="big-text-section">
+  <p class="big-text" id="bigText">AI adalah alat. Ide, arah visual, dan keputusan akhir tetap di tangan saya sebagai desainer.</p>
+</div>
+
+<section id="about">
+  <div class="section-inner">
+    <div class="section-header-center reveal"><span class="chip glass">Di balik R•CODE</span><h2 class="section-title">Dibuat dengan rasa ingin tahu</h2><p class="section-subtitle"></p></div>
+    <div class="feature-main glass reveal" style="max-width:860px;margin:0 auto 24px;align-items:flex-start">
+      <p style="margin-bottom:16px;color:var(--text);max-width:none">Saya <strong>Hadier Al Ghanie</strong>, desainer dan pengembang web independen dari Indonesia. R•CODE adalah ruang pribadi saya untuk mengubah ide menjadi website, aplikasi web kecil, komponen antarmuka yang berguna, dan sumber belajar.</p>
+      <p style="margin-bottom:0;max-width:none">Saya bekerja dengan AI sebagai asisten dalam prosesnya. Konsep, bahasa visual, struktur, dan hasil akhir saya yang tentukan. Saya lebih suka berbagi hal yang berguna secara tenang: kode gratis, prompt praktis, eksperimen, dan pelajaran di sepanjang jalan.</p>
+    </div>
+    <div class="section-header-center reveal" style="margin:56px 0 32px"><span class="slogan">Prinsip kerja sederhana</span><h2 class="section-title" style="font-size:clamp(1.8rem,4vw,2.8rem)">Jelajahi. Arahkan. Sempurnakan. Putuskan.</h2><p class="section-subtitle">AI bisa menyarankan, menghasilkan, dan mempercepat. Saya yang bertanggung jawab atas brief, keputusan desain, pengecekan kualitas, dan hasil akhir.</p></div>
+    <div class="process-grid">
+      <div class="process-step glass reveal"><div class="process-line"><span class="process-dot"></span></div><h3>Jelajahi</h3><p>Mencoba berbagai kemungkinan dengan bantuan AI untuk mempercepat eksplorasi.</p></div>
+      <div class="process-step glass reveal" style="--d:.1s"><div class="process-line"><span class="process-dot"></span></div><h3>Arahkan</h3><p>Saya menentukan konsep, bahasa visual, dan struktur.</p></div>
+      <div class="process-step glass reveal" style="--d:.2s"><div class="process-line"><span class="process-dot"></span></div><h3>Sempurnakan</h3><p>Merevisi, menguji, dan merapikan detail sampai terasa tepat.</p></div>
+      <div class="process-step glass reveal" style="--d:.3s"><div class="process-line"><span class="process-dot"></span></div><h3>Putuskan</h3><p>Keputusan akhir dan kualitas hasil tetap menjadi tanggung jawab saya.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="section-inner">
+    <div class="cta-card glass reveal" style="margin-bottom:48px">
+      <span class="chip glass">R•CODE · Pelan-pelan membangun</span>
+      <h2>Terbuka untuk<br>ide-ide bagus.</h2>
+      <p>Punya ide, proyek, atau sekadar ingin menyapa? Kirim pesan — saya senang mendengarnya.</p>
+      <a href="https://wa.me/6282319527214" target="_blank" rel="noopener" class="btn-primary" data-tint="teal">Chat WhatsApp <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+    <div class="contact-grid">
+      <a href="mailto:hadierag@gmail.com" class="contact-card glass reveal"><span class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg></span><span><span class="contact-label">Email</span><span class="contact-value">hadierag@gmail.com</span></span></a>
+      <a href="https://www.instagram.com/rcode.imagination" target="_blank" rel="noopener" class="contact-card ig glass reveal" style="--d:.1s"><span class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg></span><span><span class="contact-label">Instagram</span><span class="contact-value">@rcode.imagination</span></span></a>
+      <a href="https://wa.me/6282319527214" target="_blank" rel="noopener" class="contact-card whatsapp glass reveal" style="--d:.2s"><span class="contact-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span><span><span class="contact-label">WhatsApp</span><span class="contact-value">+62 823-1952-7214</span></span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner glass">
+    <div class="footer-brand">R<i class="dot"></i>CODE</div>
+    <div class="footer-tag">Desainer &amp; Pengembang Web Independen</div>
+    <div class="footer-links">
+      <a href="code-library.html">Kode Gratis</a><a href="prompt-library.html">Prompt Gratis</a><a href="#zonagreen">ZonaGreen Creative Lab</a><a href="#experiments">Eksperimen</a><a href="#contact">Kontak</a><a href="privacy.html">Kebijakan Privasi</a><a href="terms.html">Ketentuan Layanan</a>
+    </div>
+    <p class="footer-copy">&copy; R•CODE IMAGINATION · Membangun ruang dari imajinasi</p>
+  </div>
+</footer>
+<script>
+(function(){
+  function dup(id,n){var m=document.getElementById(id),h=m.innerHTML,c=m.children.length;
+    for(var i=0;i<n;i++)m.insertAdjacentHTML('beforeend',h);
+    [].slice.call(m.children,c).forEach(function(e){e.classList.add('clone');e.setAttribute('aria-hidden','true')})}
+  dup('marquee',1);dup('phones',2);
+
+  /* Karusel ponsel: bisa digeser (sentuh / mouse / trackpad), berjalan sendiri saat dibiarkan, tanpa batas */
+  (function(){
+    var car=document.querySelector('.phones-wrap'),ph=document.getElementById('phones');
+    var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var set=1,pos=0,last=0,idle=0,hover=false,drag=false,sx=0,sl=0;
+    function calc(){set=ph.children[8].offsetLeft-ph.children[0].offsetLeft||1}
+    function wrap(){if(pos<set*.5){pos+=set;car.scrollLeft=pos}else if(pos>set*1.5){pos-=set;car.scrollLeft=pos}}
+    car.addEventListener('scroll',function(){
+      if(Math.abs(car.scrollLeft-pos)>2){pos=car.scrollLeft;idle=performance.now();wrap()}
+    },{passive:true});
+    car.addEventListener('pointerdown',function(e){
+      if(e.pointerType!=='mouse')return;
+      drag=true;sx=e.clientX;sl=car.scrollLeft;car.classList.add('dragging');car.setPointerCapture(e.pointerId);
+    });
+    car.addEventListener('pointermove',function(e){if(drag)car.scrollLeft=sl-(e.clientX-sx)});
+    function up(){if(!drag)return;drag=false;car.classList.remove('dragging');idle=performance.now()}
+    car.addEventListener('pointerup',up);car.addEventListener('pointercancel',up);
+    car.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse')hover=true});
+    car.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse'){hover=false;idle=performance.now()}});
+    function tick(t){
+      var dt=Math.min(t-last,50);last=t;
+      if(!reduce&&!drag&&!hover&&t-idle>2000){pos+=dt*.028;wrap();car.scrollLeft=pos}
+      requestAnimationFrame(tick);
+    }
+    function init(){calc();pos=set;car.scrollLeft=pos}
+    addEventListener('resize',function(){calc()});
+    addEventListener('load',init);
+    requestAnimationFrame(function(t){init();last=t;requestAnimationFrame(tick)});
+  })();
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
+  var co=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(!e.isIntersecting)return;co.unobserve(e.target);
+    var el=e.target,end=parseFloat(el.dataset.count),suf=el.dataset.suffix||'',sep=el.dataset.sep,t0=null;
+    (function step(t){if(!t0)t0=t;var p=Math.min((t-t0)/1500,1),v=Math.round(end*(1-Math.pow(1-p,3)));
+      el.textContent=(sep?v.toLocaleString('id-ID'):v)+suf;if(p<1)requestAnimationFrame(step)})(performance.now());
+  })},{threshold:.6});
+  document.querySelectorAll('[data-count]').forEach(function(el){co.observe(el)});
+  var bt=document.getElementById('bigText');
+  bt.innerHTML=bt.textContent.trim().split(/\s+/).map(function(w){return '<span>'+w+'</span>'}).join(' ');
+  var words=bt.querySelectorAll('span');
+  function bigScroll(){var r=bt.getBoundingClientRect(),vh=innerHeight;var p=Math.min(Math.max((vh*.85-r.top)/(vh*.6),0),1);var n=Math.round(p*words.length);words.forEach(function(w,i){w.classList.toggle('on',i<n)})}
+  addEventListener('scroll',bigScroll,{passive:true});bigScroll();
+  var links=document.querySelectorAll('.nav-links a');
+  var so=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'-45% 0px -50% 0px'});
+  ['code','prompts','zonagreen','experiments','about'].forEach(function(id){so.observe(document.getElementById(id))});
+  var b=document.querySelector('.menu-toggle'),mm=document.querySelector('.mobile-menu');
+  b.addEventListener('click',function(){var o=mm.classList.toggle('open');b.setAttribute('aria-expanded',o)});
+  mm.addEventListener('click',function(e){if(e.target.tagName==='A'){mm.classList.remove('open');b.setAttribute('aria-expanded',false)}});
+  var g=document.querySelector('.cursor-glow');
+  if(matchMedia('(hover:hover)').matches){addEventListener('mousemove',function(e){g.style.opacity=1;g.style.left=e.clientX+'px';g.style.top=e.clientY+'px'},{passive:true})}
+})();
+</script>
+<script>
+/* ============ Kaca cair WebGL: latar sutra + pembiasan cahaya ============ */
+(function(){
+  var MAX=48;
+  var cv=document.getElementById('gl');
+  var gl=cv.getContext('webgl',{antialias:false,alpha:false,powerPreference:'high-performance'});
+  if(!gl)return;
+
+  var vs='attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  var fs='precision highp float;'+
+  'uniform vec2 uRes,uMouse;uniform float uT,uDpr;uniform int uN;'+
+  'uniform vec4 uRect['+MAX+'],uPar['+MAX+'],uTint['+MAX+'];'+
+  /* latar sutra */
+  'vec3 bg(vec2 p){'+
+  ' vec2 uv=p/uRes.y*1.6;float t=uT*.05;vec2 q=uv;'+
+  ' for(int i=0;i<4;i++){float f=float(i)+1.;'+
+  '  q+=(.6/f)*vec2(sin(f*q.y*1.9+t*3.+f*1.3),cos(f*q.x*1.7-t*2.5+f*.7));}'+
+  ' float a=sin(q.x*2.4+q.y*1.2),b=sin(q.y*2.1-q.x*1.6+2.);'+
+  ' float k=a*.5+.5,m=b*.5+.5;'+
+  ' vec3 red=vec3(0.,.66,.60),org=vec3(.06,.92,.76),blu=vec3(.05,.18,.95),pur=vec3(.62,.10,.82),dk=vec3(.015,.03,.04);'+
+  ' vec3 c=mix(mix(blu,pur,m),mix(red,org,m),smoothstep(.42,.58,k));'+
+  ' float ridge=pow(1.-abs(b),2.);'+
+  ' c*=.55+1.05*ridge;'+
+  ' c=mix(dk,c,smoothstep(.0,.35,.45*m+.55*abs(a)));'+
+  ' c+=vec3(.2,1.,.85)*exp(-length(p-uMouse)/240.)*.14;'+
+  ' vec2 v=p/uRes-.5;c*=1.-.45*smoothstep(.25,.95,length(v));'+
+  ' return c*.8;}'+
+  'float sdBox(vec2 p,vec2 h,float r){vec2 q=abs(p)-h+r;return min(max(q.x,q.y),0.)+length(max(q,0.))-r;}'+
+  'void main(){'+
+  ' vec2 px=vec2(gl_FragCoord.x,uRes.y*uDpr-gl_FragCoord.y)/uDpr;'+
+  ' vec3 base=bg(px);'+
+  ' float bestSd=1e5,bestArea=1e9;vec4 gr=vec4(0.),gp=vec4(0.),gt=vec4(0.);bool hit=false;'+
+  ' for(int i=0;i<'+MAX+';i++){if(i>=uN)break;'+
+  '  vec4 r=uRect[i];float sd=sdBox(px-r.xy,r.zw,uPar[i].x);bestSd=min(bestSd,sd);'+
+  '  float ar=r.z*r.w;if(sd<1.&&ar<bestArea){bestArea=ar;gr=r;gp=uPar[i];gt=uTint[i];hit=true;}}'+
+  ' base*=1.-.38*exp(-max(bestSd,0.)/20.);'+
+  ' vec3 col=base;'+
+  ' if(hit){'+
+  '  vec2 lp=px-gr.xy;vec2 hh=gr.zw;float r=gp.x;'+
+  '  float sd=sdBox(lp,hh,r);float d=max(-sd,0.);'+
+  '  vec2 e=vec2(1.,0.);'+
+  '  vec2 n=normalize(vec2(sdBox(lp+e.xy,hh,r)-sdBox(lp-e.xy,hh,r),sdBox(lp+e.yx,hh,r)-sdBox(lp-e.yx,hh,r))+1e-5);'+
+  '  float rim=min(min(hh.x,hh.y)*.9,28.);'+
+  '  float t=clamp(1.-d/rim,0.,1.);'+
+  '  float bend=pow(t,2.2)*rim*1.7;'+
+  '  vec2 off=n*bend;vec2 pc=gr.xy+lp*.97;'+
+  '  vec3 refr;refr.r=bg(pc+off*.88).r;refr.g=bg(pc+off).g;refr.b=bg(pc+off*1.14).b;'+
+  '  float s=6.+14.*gp.z;'+
+  '  vec3 bl=(bg(pc+off+vec2(s,s))+bg(pc+off+vec2(-s,s))+bg(pc+off+vec2(s,-s))+bg(pc+off+vec2(-s,-s)))*.25;'+
+  '  col=mix(refr,bl,gp.z);'+
+  '  col=col*.8+.05;'+
+  '  col=mix(col,gt.rgb*(.5+.9*dot(col,vec3(.333))),gt.a);'+
+  '  vec2 L=normalize(vec2(-.5,-.85));'+
+  '  col+=pow(max(dot(n,L),0.),2.)*exp(-d/2.4)*.95;'+
+  '  col+=pow(max(dot(n,-L),0.),2.)*exp(-d/2.)*.4;'+
+  '  col+=exp(-d/1.1)*.16+exp(-d/12.)*.06;'+
+  '  col+=.06*clamp(1.-(lp.y+hh.y)/(2.*hh.y),0.,1.);'+
+  '  col=mix(base,col,clamp(.5-sd,0.,1.)*gp.y);'+
+  ' }'+
+  ' col+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/255.;'+
+  ' gl_FragColor=vec4(col,1.);}';
+
+  function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(s));return null}return s}
+  var v=sh(gl.VERTEX_SHADER,vs),f=sh(gl.FRAGMENT_SHADER,fs);if(!v||!f)return;
+  var pg=gl.createProgram();gl.attachShader(pg,v);gl.attachShader(pg,f);gl.linkProgram(pg);
+  if(!gl.getProgramParameter(pg,gl.LINK_STATUS)){console.warn(gl.getProgramInfoLog(pg));return}
+  gl.useProgram(pg);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var al=gl.getAttribLocation(pg,'a');gl.enableVertexAttribArray(al);gl.vertexAttribPointer(al,2,gl.FLOAT,false,0,0);
+  var U={};['uRes','uMouse','uT','uDpr','uN','uRect','uPar','uTint'].forEach(function(n){U[n]=gl.getUniformLocation(pg,n)});
+
+  document.documentElement.classList.add('gl-on');
+  cv.addEventListener('webglcontextlost',function(e){e.preventDefault();document.documentElement.classList.remove('gl-on')});
+
+  var els=[].slice.call(document.querySelectorAll('.glass,.btn-primary'));
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var rect=new Float32Array(MAX*4),par=new Float32Array(MAX*4),tint=new Float32Array(MAX*4);
+  var TINTS={blue:[.25,.36,1,.55],teal:[0,.82,.72,.78]};
+  var mx=innerWidth/2,my=innerHeight*.35,tx=mx,ty=my,W=0,H=0,dpr=1;
+  addEventListener('mousemove',function(e){tx=e.clientX;ty=e.clientY},{passive:true});
+
+  function size(){
+    dpr=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);gl.viewport(0,0,cv.width,cv.height);
+  }
+  addEventListener('resize',size);size();
+
+  function effOpacity(el){
+    var o=1;for(var e=el;e&&e!==document.body;e=e.parentElement){o*=parseFloat(getComputedStyle(e).opacity);if(o<.01)return 0}
+    return o;
+  }
+  function smooth(a,b,x){x=Math.min(Math.max((x-a)/(b-a),0),1);return x*x*(3-2*x)}
+
+  function frame(now){
+    mx+=(tx-mx)*.08;my+=(ty-my)*.08;
+    var n=0;
+    for(var i=0;i<els.length&&n<MAX;i++){
+      var el=els[i],r=el.getBoundingClientRect();
+      if(r.width<2||r.height<2||r.bottom<-40||r.top>H+40||r.right<-40||r.left>W+40)continue;
+      var o=effOpacity(el);if(o<.01)continue;
+      var fx=el.closest('.fade-x');if(fx){var mk=getComputedStyle(fx);if((mk.webkitMaskImage||mk.maskImage||'none')!=='none'){var cx=(r.left+r.right)/2/W;o*=smooth(0,.12,cx)*smooth(0,.12,1-cx)}}
+      var cs=getComputedStyle(el),rad=cs.borderTopLeftRadius,rv=parseFloat(rad)||0;
+      if(rad.indexOf('%')>-1)rv=rv/100*Math.min(r.width,r.height);
+      rv=Math.min(rv,r.width/2,r.height/2);
+      var k=n*4;
+      rect[k]=(r.left+r.right)/2;rect[k+1]=(r.top+r.bottom)/2;rect[k+2]=r.width/2;rect[k+3]=r.height/2;
+      par[k]=rv;par[k+1]=o;par[k+2]=r.width*r.height>40000?.85:.4;par[k+3]=0;
+      var t=TINTS[el.dataset.tint]||[0,0,0,0];tint[k]=t[0];tint[k+1]=t[1];tint[k+2]=t[2];tint[k+3]=t[3];
+      n++;
+    }
+    gl.uniform2f(U.uRes,W,H);gl.uniform2f(U.uMouse,mx,my);
+    gl.uniform1f(U.uT,reduce?0:now/1000);gl.uniform1f(U.uDpr,dpr);gl.uniform1i(U.uN,n);
+    gl.uniform4fv(U.uRect,rect);gl.uniform4fv(U.uPar,par);gl.uniform4fv(U.uTint,tint);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
